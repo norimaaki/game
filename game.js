@@ -9,6 +9,7 @@ const mario = {
   width: 50,
   height: 50,
   speed: 5,
+  velocityX: 0,
   velocityY: 0,
   jumping: false
 };
@@ -92,11 +93,37 @@ function handleJump() {
 function handleKeyDown(event) {
   if (event.key === 'ArrowUp') {
     handleJump();
+  } else if (event.key === 'ArrowLeft') {
+    mario.velocityX = -mario.speed;
+  } else if (event.key === 'ArrowRight') {
+    mario.velocityX = mario.speed;
   }
 }
 
-function handleTouchStart() {
+function handleKeyUp(event) {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    mario.velocityX = 0;
+  }
+}
+
+function handleTouchStart(event) {
+  event.preventDefault();
   handleJump();
+}
+
+function handleTouchMove(event) {
+  event.preventDefault();
+  const touchX = event.touches[0].clientX;
+  if (touchX < canvas.width / 2) {
+    mario.velocityX = -mario.speed;
+  } else {
+    mario.velocityX = mario.speed;
+  }
+}
+
+function handleTouchEnd(event) {
+  event.preventDefault();
+  mario.velocityX = 0;
 }
 
 function detectCollision() {
@@ -155,6 +182,16 @@ function updateEnemy() {
   }
 }
 
+function updateMarioPosition() {
+  mario.x += mario.velocityX;
+
+  if (mario.x < 0) {
+    mario.x = 0;
+  } else if (mario.x + mario.width > canvas.width) {
+    mario.x = canvas.width - mario.width;
+  }
+}
+
 function gameLoop() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -166,11 +203,15 @@ function gameLoop() {
   applyGravity();
   detectCollision();
   updateEnemy();
+  updateMarioPosition();
 
   window.requestAnimationFrame(gameLoop);
 }
 
 window.addEventListener('keydown', handleKeyDown);
+window.addEventListener('keyup', handleKeyUp);
 canvas.addEventListener('touchstart', handleTouchStart);
+canvas.addEventListener('touchmove', handleTouchMove);
+canvas.addEventListener('touchend', handleTouchEnd);
 
 gameLoop();
