@@ -95,6 +95,10 @@ function handleKeyDown(event) {
   }
 }
 
+function handleTouchStart() {
+  handleJump();
+}
+
 function detectCollision() {
   // プラットフォームとの衝突検出
   if (
@@ -167,5 +171,6 @@ function gameLoop() {
 }
 
 window.addEventListener('keydown', handleKeyDown);
+canvas.addEventListener('touchstart', handleTouchStart);
 
 gameLoop();
