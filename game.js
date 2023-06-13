@@ -1,11 +1,9 @@
-// ゲームのロジックを記述する
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const mario = {
   x: 50,
-  y: 0,
+  y: canvas.height - 100,
   width: 50,
   height: 50,
   speed: 5,
@@ -24,7 +22,7 @@ const platform = {
 
 const enemy = {
   x: canvas.width - 50,
-  y: canvas.height - 50,
+  y: canvas.height - 100,
   width: 50,
   height: 50,
   speed: 3
@@ -32,7 +30,7 @@ const enemy = {
 
 const coin = {
   x: canvas.width / 2,
-  y: canvas.height - 100,
+  y: canvas.height - 200,
   width: 25,
   height: 25,
   collected: false
@@ -45,85 +43,18 @@ const goal = {
   height: 50
 };
 
-function drawMario() {
-  ctx.fillStyle = 'blue';
-  ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
-}
-
-function drawPlatform() {
-  ctx.fillStyle = 'green';
-  ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
-}
-
 function drawEnemy() {
   ctx.fillStyle = 'red';
   ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
 }
 
-function drawCoin() {
-  if (!coin.collected) {
-    ctx.fillStyle = 'yellow';
-    ctx.fillRect(coin.x, coin.y, coin.width, coin.height);
+function updateEnemy() {
+  enemy.x -= enemy.speed;
+
+  if (enemy.x + enemy.width < 0) {
+    enemy.x = canvas.width;
+    enemy.y = canvas.height - 100;
   }
-}
-
-function drawGoal() {
-  ctx.fillStyle = 'orange';
-  ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
-}
-
-function applyGravity() {
-  if (mario.y + mario.height < canvas.height) {
-    mario.velocityY += gravity;
-    mario.y += mario.velocityY;
-  } else {
-    mario.velocityY = 0;
-    mario.y = canvas.height - mario.height;
-    mario.jumping = false;
-  }
-}
-
-function handleJump() {
-  if (!mario.jumping) {
-    mario.velocityY = -12;
-    mario.jumping = true;
-  }
-}
-
-function handleKeyDown(event) {
-  if (event.key === 'ArrowUp') {
-    handleJump();
-  } else if (event.key === 'ArrowLeft') {
-    mario.velocityX = -mario.speed;
-  } else if (event.key === 'ArrowRight') {
-    mario.velocityX = mario.speed;
-  }
-}
-
-function handleKeyUp(event) {
-  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    mario.velocityX = 0;
-  }
-}
-
-function handleTouchStart(event) {
-  event.preventDefault();
-  handleJump();
-}
-
-function handleTouchMove(event) {
-  event.preventDefault();
-  const touchX = event.touches[0].clientX;
-  if (touchX < canvas.width / 2) {
-    mario.velocityX = -mario.speed;
-  } else {
-    mario.velocityX = mario.speed;
-  }
-}
-
-function handleTouchEnd(event) {
-  event.preventDefault();
-  mario.velocityX = 0;
 }
 
 function detectCollision() {
@@ -145,8 +76,8 @@ function detectCollision() {
     mario.y < enemy.y + enemy.height &&
     mario.y + mario.height > enemy.y
   ) {
-    // 衝突時の処理（ゲームオーバーなど）
     console.log('ゲームオーバー');
+    resetGame();
   }
 
   // コインの収集判定
@@ -169,49 +100,110 @@ function detectCollision() {
     mario.y < goal.y + goal.height &&
     mario.y + mario.height > goal.y
   ) {
-    // ゴール到達時の処理（ゲームクリアなど）
     console.log('ゲームクリア！');
+    resetGame();
   }
 }
 
-function updateEnemy() {
-  enemy.x -= enemy.speed;
-
-  if (enemy.x + enemy.width < 0) {
-    enemy.x = canvas.width;
-  }
+function resetGame() {
+  mario.x = 50;
+  mario.y = canvas.height - 100;
+  mario.velocityX = 0;
+  mario.velocityY = 0;
+  mario.jumping = false;
+  coin.collected = false;
+  enemy.x = canvas.width - 50;
+  enemy.y = canvas.height - 100;
 }
 
 function updateMarioPosition() {
   mario.x += mario.velocityX;
+  mario.y += mario.velocityY;
 
   if (mario.x < 0) {
     mario.x = 0;
   } else if (mario.x + mario.width > canvas.width) {
     mario.x = canvas.width - mario.width;
   }
+
+  if (mario.y + mario.height > canvas.height) {
+    mario.y = canvas.height - mario.height;
+    mario.velocityY = 0;
+    mario.jumping = false;
+  }
 }
 
-function gameLoop() {
+function applyGravity() {
+  if (mario.jumping) {
+    mario.velocityY += gravity;
+  }
+}
+
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawMario();
-  drawPlatform();
+  // Draw platform
+  ctx.fillStyle = 'gray';
+  ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+  // Draw enemy
   drawEnemy();
-  drawCoin();
-  drawGoal();
-  applyGravity();
-  detectCollision();
-  updateEnemy();
+
+  // Draw coin
+  if (!coin.collected) {
+    ctx.fillStyle = 'yellow';
+    ctx.fillRect(coin.x, coin.y, coin.width, coin.height);
+  }
+
+  // Draw goal
+  ctx.fillStyle = 'green';
+  ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+
+  // Draw Mario
+  ctx.fillStyle = 'blue';
+  ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+
+  // Update Mario's position
   updateMarioPosition();
 
-  window.requestAnimationFrame(gameLoop);
+  // Apply gravity
+  applyGravity();
+
+  // Detect collisions
+  detectCollision();
+
+  // Update enemy
+  updateEnemy();
+
+  requestAnimationFrame(draw);
+}
+
+function handleKeyDown(event) {
+  if (event.key === 'ArrowUp' || event.key === ' ') {
+    handleJump();
+  }
+  if (event.key === 'ArrowLeft') {
+    mario.velocityX = -mario.speed;
+  }
+  if (event.key === 'ArrowRight') {
+    mario.velocityX = mario.speed;
+  }
+}
+
+function handleKeyUp(event) {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    mario.velocityX = 0;
+  }
+}
+
+function handleJump() {
+  if (!mario.jumping) {
+    mario.velocityY -= 15;
+    mario.jumping = true;
+  }
 }
 
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', handleKeyUp);
-canvas.addEventListener('touchstart', handleTouchStart);
-canvas.addEventListener('touchmove', handleTouchMove);
-canvas.addEventListener('touchend', handleTouchEnd);
 
-gameLoop();
+draw();
