@@ -43,9 +43,14 @@ const goal = {
   height: 50
 };
 
+const camera = {
+  x: 0,
+  y: 0
+};
+
 function drawEnemy() {
   ctx.fillStyle = 'red';
-  ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+  ctx.fillRect(enemy.x - camera.x, enemy.y, enemy.width, enemy.height);
 }
 
 function updateEnemy() {
@@ -131,6 +136,17 @@ function updateMarioPosition() {
     mario.velocityY = 0;
     mario.jumping = false;
   }
+
+  // カメラの位置を更新
+  camera.x = mario.x - canvas.width / 2;
+  camera.y = mario.y - canvas.height / 2;
+
+  // カメラの位置を制限
+  if (camera.x < 0) {
+    camera.x = 0;
+  } else if (camera.x + canvas.width > canvas.width) {
+    camera.x = canvas.width - canvas.width;
+  }
 }
 
 function applyGravity() {
@@ -144,7 +160,7 @@ function draw() {
 
   // Draw platform
   ctx.fillStyle = 'gray';
-  ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+  ctx.fillRect(platform.x - camera.x, platform.y, platform.width, platform.height);
 
   // Draw enemy
   drawEnemy();
@@ -152,16 +168,16 @@ function draw() {
   // Draw coin
   if (!coin.collected) {
     ctx.fillStyle = 'yellow';
-    ctx.fillRect(coin.x, coin.y, coin.width, coin.height);
+    ctx.fillRect(coin.x - camera.x, coin.y, coin.width, coin.height);
   }
 
   // Draw goal
   ctx.fillStyle = 'green';
-  ctx.fillRect(goal.x, goal.y, goal.width, goal.height);
+  ctx.fillRect(goal.x - camera.x, goal.y, goal.width, goal.height);
 
   // Draw Mario
   ctx.fillStyle = 'blue';
-  ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
+  ctx.fillRect(mario.x - camera.x, mario.y, mario.width, mario.height);
 
   // Update Mario's position
   updateMarioPosition();
