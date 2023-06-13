@@ -172,9 +172,6 @@ function draw() {
   // Detect collisions
   detectCollision();
 
-  // Update enemy
-  updateEnemy();
-
   requestAnimationFrame(draw);
 }
 
@@ -196,6 +193,36 @@ function handleKeyUp(event) {
   }
 }
 
+function handleTouchStart(event) {
+  if (event.targetTouches.length === 1) {
+    event.preventDefault();
+    const touch = event.targetTouches[0];
+    const touchX = touch.pageX - canvas.offsetLeft;
+    const touchY = touch.pageY - canvas.offsetTop;
+
+    if (touchY >= mario.y) {
+      handleJump();
+    } else if (touchX < canvas.width / 2) {
+      mario.velocityX = -mario.speed;
+    } else {
+      mario.velocityX = mario.speed;
+    }
+  }
+}
+
+function handleTouchEnd(event) {
+  if (event.changedTouches.length === 1) {
+    event.preventDefault();
+    const touch = event.changedTouches[0];
+    const touchX = touch.pageX - canvas.offsetLeft;
+    const touchY = touch.pageY - canvas.offsetTop;
+
+    if (touchY < mario.y && (touchX < canvas.width / 2 || touchX >= canvas.width / 2)) {
+      mario.velocityX = 0;
+    }
+  }
+}
+
 function handleJump() {
   if (!mario.jumping) {
     mario.velocityY -= 15;
@@ -205,5 +232,7 @@ function handleJump() {
 
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('keyup', handleKeyUp);
+canvas.addEventListener('touchstart', handleTouchStart);
+canvas.addEventListener('touchend', handleTouchEnd);
 
 draw();
